@@ -10,7 +10,7 @@
 using namespace std::chrono;
 using namespace std;
 
-ifstream ifile("Orders3.csv");
+ifstream ifile("Orders2.csv");
 ofstream ofile("Execution_Rep.csv");
 
 // Order class
@@ -128,12 +128,14 @@ private:
 
             int matchedQty = min(order.quantity, oppositeBook.front().quantity);
 
-            order.quantity -= matchedQty;
+            // order.quantity -= matchedQty;
             oppositeBook.front().quantity -= matchedQty;
 
-            string status = (order.quantity == 0) ? fillStatus[2] : fillStatus[3];
+            string status = ((order.quantity-matchedQty) == 0) ? fillStatus[2] : fillStatus[3];
             order.status = status;
             writeLineOutputFile(order);
+
+            order.quantity -= matchedQty;
 
             if (oppositeBook.front().quantity == 0)
             {
