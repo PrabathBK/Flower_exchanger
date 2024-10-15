@@ -100,6 +100,10 @@ public:
     {
         ofile << order.orderID << "," << order.clientOrderID << "," << order.instrument << "," << order.side << "," << order.status << "," << order.quantity << "," << order.price << "," << order.error << endl;
     }
+    static void writeLineOutputFile(const Order &order, int amount)
+    {
+        ofile << order.orderID << "," << order.clientOrderID << "," << order.instrument << "," << order.side << "," << order.status << "," << amount << "," << order.price << "," << order.error << endl;
+    }
 
     // Print the current state of the buy and sell order books
     void printOrderBook()
@@ -133,12 +137,12 @@ private:
             string status = (order.quantity == oppositeBook.front().quantity) ? fillStatus[2] : fillStatus[3];
             order.status = status;
 
-            if (order.quantity > oppositeBook.front().quantity){
-                order.quantity -= matchedQty;
-                cout << "Here" << endl;
-            } 
+            // if (order.quantity > oppositeBook.front().quantity){
+            //     order.quantity -= matchedQty;
+            //     cout << "Here" << endl;
+            // }
             oppositeBook.front().quantity -= matchedQty;
-            writeLineOutputFile(order);
+            writeLineOutputFile(order,matchedQty);
 
             order.quantity -= matchedQty;
 
@@ -257,7 +261,7 @@ int main()
         Order order("ord" + to_string(ordNumber++), v[0], v[1], stoi(v[2]), stoi(v[3]), stod(v[4]), validity);
         orders.push_back(order);
 
-        cout<<"--------Before--------"<<endl;
+        cout << "--------Before--------" << endl;
 
         // Print order details before processing
         cout << "Processing Order ID: " << order.orderID << ", Client Order ID: " << order.clientOrderID
@@ -281,11 +285,10 @@ int main()
             OrderBook::writeLineOutputFile(order);
         }
 
-        cout<<"----------after----------"<<endl;
-                cout << "Processing Order ID: " << order.orderID << ", Client Order ID: " << order.clientOrderID
+        cout << "----------after----------" << endl;
+        cout << "Processing Order ID: " << order.orderID << ", Client Order ID: " << order.clientOrderID
              << ", Instrument: " << order.instrument << ", Side: " << order.side << ", Quantity: "
              << order.quantity << ", Price: " << order.price << ", Status: " << order.status << endl;
-
     }
 
     ifile.close();
