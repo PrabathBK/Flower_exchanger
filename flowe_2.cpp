@@ -10,7 +10,7 @@
 using namespace std::chrono;
 using namespace std;
 
-ifstream ifile("test.csv");
+ifstream ifile("Orders7.csv");
 ofstream ofile("Execution_Rep.csv");
 
 // Order class
@@ -138,7 +138,7 @@ private:
 
             int matchedQty = min(order.quantity, oppositeBook.front().quantity);
 
-            string status = (order.quantity == oppositeBook.front().quantity) ? fillStatus[2] : fillStatus[3];
+            string status = (order.quantity > oppositeBook.front().quantity) ? fillStatus[3] : fillStatus[2];
             order.status = status;
 
 
@@ -147,13 +147,14 @@ private:
 
             order.quantity -= matchedQty;
 
+
             if (oppositeBook.front().quantity == 0)
             {
                 auto *matchedOrder = findOrderByOrdID(oppositeBook.front().orderID);
                 if (matchedOrder)
                 {
                     matchedOrder->status = fillStatus[2]; // Mark the opposite order as fully filled
-                    writeLineOutputFile(*matchedOrder);
+                    writeLineOutputFile(*matchedOrder,matchedQty);
                 }
                 oppositeBook.erase(oppositeBook.begin()); // Remove fully matched orders
             }
@@ -208,10 +209,10 @@ string checkValidityOfOrder(const vector<string> &v)
     }
     if (side != 1 && side != 2)
         return "Invalid side";
+    if (quantity % 10 != 0 || quantity < 10 || quantity > 999)
+        return "Invalid size";
     if (price < 0)
         return "Invalid price";
-    if (quantity % 10 != 0 || quantity < 10 || quantity > 1000)
-        return "Invalid size";
 
     return "";
 }
