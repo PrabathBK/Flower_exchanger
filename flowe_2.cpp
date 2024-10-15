@@ -104,6 +104,10 @@ public:
     {
         ofile << order.orderID << "," << order.clientOrderID << "," << order.instrument << "," << order.side << "," << order.status << "," << amount << "," << order.price << "," << order.error << endl;
     }
+    static void writeLineOutputFile(const Order &order, int amount,double price)
+    {
+        ofile << order.orderID << "," << order.clientOrderID << "," << order.instrument << "," << order.side << "," << order.status << "," << amount << "," << price << "," << order.error << endl;
+    }
 
     // Print the current state of the buy and sell order books
     void printOrderBook()
@@ -142,7 +146,7 @@ private:
             //     cout << "Here" << endl;
             // }
             oppositeBook.front().quantity -= matchedQty;
-            writeLineOutputFile(order,matchedQty);
+            writeLineOutputFile(order,matchedQty,(order.price!=oppositeBook.front().price)?oppositeBook.front().price:order.price);
 
             order.quantity -= matchedQty;
 
