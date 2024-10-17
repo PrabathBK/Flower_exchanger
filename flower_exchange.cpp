@@ -1,3 +1,4 @@
+
 #include <iostream>
 #include <vector>
 #include <fstream>
@@ -5,12 +6,11 @@
 #include <sstream>
 #include <chrono>
 #include <ctime>
-// #include <algorithm>
 
 using namespace std::chrono;
 using namespace std;
 
-ifstream ifile("Orders3.csv");
+ifstream ifile("Orders6.csv");
 ofstream ofile("Execution_Rep.csv");
 
 // Order class
@@ -27,33 +27,18 @@ public:
     string error;
 
     Order(string orderID,
-          string clientOrderID, 
-          string instrument, 
-          int side, 
-          int quantity, 
-          double price, 
+          string clientOrderID,
+          string instrument,
+          int side,
+          int quantity,
+          double price,
           string error)
         : orderID(orderID), clientOrderID(clientOrderID), instrument(instrument), side(side), quantity(quantity), price(price), error(error) {}
 };
 
-
 vector<Order> orders;
 
 // Helper Function for find orders by ID
-
-// Order* findOrderByOrdID(const string &order_id)
-// {
-//     auto it = std::find_if(orders.begin(), orders.end(), 
-//         [&order_id](const Order &o) {
-//             return o.orderID == order_id; 
-//         });
-
-//     if (it != orders.end()) {
-//         return &(*it); // Return a pointer to the found order
-//     }
-//     return nullptr; // Return nullptr if not found
-// }
-
 Order *findOrderByOrdID(string order_id)
 {
     for (auto &o : orders)
@@ -76,8 +61,6 @@ public:
 
     OrderBookEntry(string orderID, int quantity, double price) : orderID(orderID), quantity(quantity), price(price) {}
 };
-
-
 
 // OrderBook class manages the buy and sell orders for instruments
 class OrderBook
@@ -107,12 +90,40 @@ public:
         {
             processOrder(order, buy, sell, true); // Process the entry as a sell order
         }
+
+        // Print the current state of the order book after processing each order
+        printOrderBook();
     }
 
     // Writes the execution details to the output file
     static void writeLineOutputFile(const Order &order)
     {
         ofile << order.orderID << "," << order.clientOrderID << "," << order.instrument << "," << order.side << "," << order.status << "," << order.quantity << "," << order.price << "," << order.error << endl;
+    }
+    static void writeLineOutputFile(const Order &order, int amount)
+    {
+        ofile << order.orderID << "," << order.clientOrderID << "," << order.instrument << "," << order.side << "," << order.status << "," << amount << "," << order.price << "," << order.error << endl;
+    }
+    static void writeLineOutputFile(const Order &order, int amount,double price)
+    {
+        ofile << order.orderID << "," << order.clientOrderID << "," << order.instrument << "," << order.side << "," << order.status << "," << amount << "," << price << "," << order.error << endl;
+    }
+
+    // Print the current state of the buy and sell order books - for debug
+    void printOrderBook()
+    {
+        cout << "Order Book for instrument: " << instrument << endl;
+        cout << "Buy Orders:" << endl;
+        for (const auto &entry : buy)
+        {
+            cout << "OrderID: " << entry.orderID << ", Quantity: " << entry.quantity << ", Price: " << entry.price << endl;
+        }
+        cout << "Sell Orders:" << endl;
+        for (const auto &entry : sell)
+        {
+            cout << "OrderID: " << entry.orderID << ", Quantity: " << entry.quantity << ", Price: " << entry.price << endl;
+        }
+        cout << "--------------------------------------" << endl;
     }
 
 private:
@@ -124,32 +135,35 @@ private:
         // Check for matching orders in the opposite book (sell for buy, buy for sell)
         while (!oppositeBook.empty() && ((isSell && oppositeBook.front().price >= order.price) || (!isSell && oppositeBook.front().price <= order.price)) && order.quantity > 0)
         {
-            cout << "order Qty: " << order.quantity << " and Opposit front Qty " << oppositeBook.front().quantity << endl;
 
             int matchedQty = min(order.quantity, oppositeBook.front().quantity);
 
-            order.quantity -= matchedQty;
-            oppositeBook.front().quantity -= matchedQty;
-
-            string status = (order.quantity == 0) ? fillStatus[2] : fillStatus[3];
+            string status = (order.quantity > oppositeBook.front().quantity) ? fillStatus[3] : fillStatus[2];
             order.status = status;
-            writeLineOutputFile(order);
+
+
+            oppositeBook.front().quantity -= matchedQty;
+            writeLineOutputFile(order,matchedQty,(order.price!=oppositeBook.front().price)?oppositeBook.front().price:order.price);
+
+            order.quantity -= matchedQty;
+
 
             if (oppositeBook.front().quantity == 0)
             {
                 auto *matchedOrder = findOrderByOrdID(oppositeBook.front().orderID);
                 if (matchedOrder)
                 {
-                    matchedOrder->status = fillStatus[2];
-                    writeLineOutputFile(*matchedOrder);
+                    matchedOrder->status = fillStatus[2]; // Mark the opposite order as fully filled
+                    writeLineOutputFile(*matchedOrder,matchedQty);
                 }
-                oppositeBook.erase(oppositeBook.begin());
+                oppositeBook.erase(oppositeBook.begin()); // Remove fully matched orders
             }
         }
 
+        // If the current order is not fully filled, insert the remaining unfilled quantity into the same side book
         if (order.quantity > 0)
         {
-            insertOrder(sameBook, order, isSell); // Insert remaining unfilled order in its book (buy/sell)
+            insertOrder(sameBook, order, isSell);
         }
     }
 
@@ -195,10 +209,10 @@ string checkValidityOfOrder(const vector<string> &v)
     }
     if (side != 1 && side != 2)
         return "Invalid side";
+    if (quantity % 10 != 0 || quantity < 10 || quantity > 999)
+        return "Invalid size";
     if (price < 0)
         return "Invalid price";
-    if (quantity % 10 != 0 || quantity < 10 || quantity > 1000)
-        return "Invalid size";
 
     return "";
 }
@@ -233,7 +247,6 @@ int main()
     OrderBook orchid("Orchid");
     OrderBook lotus("Lotus");
 
-
     // Read and process the CSV file
     getline(ifile, line); // Skip headers
 
@@ -250,10 +263,16 @@ int main()
         Order order("ord" + to_string(ordNumber++), v[0], v[1], stoi(v[2]), stoi(v[3]), stod(v[4]), validity);
         orders.push_back(order);
 
+        // Print order details before processing - for debug
+        
+        // cout << "--------Before--------" << endl;
+        // cout << "Processing Order ID: " << order.orderID << ", Client Order ID: " << order.clientOrderID
+        //      << ", Instrument: " << order.instrument << ", Side: " << order.side << ", Quantity: "
+        //      << order.quantity << ", Price: " << order.price << ", Status: " << order.status << endl;
+
         // Select the corresponding order book
         if (v[1] == "Rose")
             rose.addOrder(order);
-            
         else if (v[1] == "Lavender")
             lavender.addOrder(order);
         else if (v[1] == "Tulip")
@@ -267,14 +286,21 @@ int main()
             order.status = "Rejected";
             OrderBook::writeLineOutputFile(order);
         }
-    }
 
-    auto stop = high_resolution_clock::now();
-    auto duration = duration_cast<microseconds>(stop - start);
-    cout << "Processing time: " << duration.count() << " microseconds" << endl;
+        // Print order details after processing - for debug
+
+        // cout << "----------after----------" << endl;
+        // cout << "Processing Order ID: " << order.orderID << ", Client Order ID: " << order.clientOrderID
+        //      << ", Instrument: " << order.instrument << ", Side: " << order.side << ", Quantity: "
+        //      << order.quantity << ", Price: " << order.price << ", Status: " << order.status << endl;
+    }
 
     ifile.close();
     ofile.close();
+
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop - start);
+    cout << "Time taken: " << duration.count() << " microseconds" << endl;
 
     return 0;
 }
