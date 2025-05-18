@@ -10,6 +10,4 @@ This project simulates a basic trading engine that reads order data from CSV fil
 
 - `flower_exchange.cpp` – Core implementation of the matching engine.
 - `flower_exchange.exe` – Compiled executable (for Windows).
-- `Orders.csv` to `Orders7.csv` – Sample order datasets.
-- `test.csv` – Test dataset.
 - `execution_rep.csv` – Output execution report after matching.
