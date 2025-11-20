@@ -10,7 +10,7 @@
 using namespace std::chrono;
 using namespace std;
 
-ifstream ifile("testcases/Orders6.csv");
+ifstream ifile("testcases/test.csv");
 ofstream ofile("Execution_Rep.csv");
 
 // Order class
