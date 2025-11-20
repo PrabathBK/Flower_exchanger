@@ -607,7 +607,6 @@ Developed as part of LSEG High-Performance Software Development Workshop
 
 - GitHub: [@PrabathBK](https://github.com/PrabathBK)
 - Project: Flower Exchange Trading System
-- Date: November 2025
 
 ---
 
