@@ -210,7 +210,7 @@ Frontend opens at `http://localhost:3000`
 
 ---
 
-## 📖 Usage
+## Usage
 
 ### Web Interface
 
@@ -220,10 +220,15 @@ Frontend opens at `http://localhost:3000`
    - Click "Add Another Order" for multiple orders
    - Or upload a CSV file
    - Click "Execute Orders"
+
+![Place Orders Interface](Img/Place_Orders.png)
+
 3. **Order Book Tab:**
    - View buy orders (left side)
    - View sell orders (right side)
    - See execution statistics
+
+![Order Book Display](Img/Order_Book.png)
 
 ### Command Line
 
