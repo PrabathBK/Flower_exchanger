@@ -54,13 +54,41 @@ function ExecutionReport({ report, loading }) {
   const buyOrders = report.filter(r => r[' Side'] === '1' || r[' Side'] === 1);
   const sellOrders = report.filter(r => r[' Side'] === '2' || r[' Side'] === 2);
 
-  // Calculate statistics
+  // Calculate statistics - count all status occurrences across all execution records
+  // Helper function to get status safely with trimming and normalization
+  const getStatus = (row) => {
+    // Try different possible field name variations
+    const status = row[' Execution Status'] || row['Execution Status'] || row['execution status'] || '';
+    return typeof status === 'string' ? status.trim() : String(status).trim();
+  };
+  
+  // Count unique orders
+  const uniqueOrderIds = new Set(report.map(r => r['Order ID']));
+  
+  // Count unique orders by status - an order is counted if it ever had that status
+  const ordersByStatus = {
+    filled: new Set(),
+    partial: new Set(),
+    new: new Set(),
+    rejected: new Set()
+  };
+  
+  report.forEach(row => {
+    const orderId = row['Order ID'];
+    const status = getStatus(row);
+    
+    if (status === 'Fill') ordersByStatus.filled.add(orderId);
+    if (status === 'PFill') ordersByStatus.partial.add(orderId);
+    if (status === 'New') ordersByStatus.new.add(orderId);
+    if (status === 'Rejected') ordersByStatus.rejected.add(orderId);
+  });
+  
   const stats = {
-    total: report.length,
-    filled: report.filter(r => r['Execution Status'] === 'Fill').length,
-    partial: report.filter(r => r['Execution Status'] === 'PFill').length,
-    new: report.filter(r => r['Execution Status'] === 'New').length,
-    rejected: report.filter(r => r['Execution Status'] === 'Rejected').length,
+    total: uniqueOrderIds.size,
+    filled: ordersByStatus.filled.size,
+    partial: ordersByStatus.partial.size,
+    new: ordersByStatus.new.size,
+    rejected: ordersByStatus.rejected.size,
   };
 
   return (

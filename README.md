@@ -29,7 +29,7 @@
 
 ---
 
-## 🎯 Overview
+## Overview
 
 Flower Exchange is a complete order matching engine that processes buy and sell orders for flower instruments in real-time. The system implements a **price-time priority algorithm**, comprehensive order validation, and generates detailed execution reports - all in **sub-millisecond** execution time.
 
